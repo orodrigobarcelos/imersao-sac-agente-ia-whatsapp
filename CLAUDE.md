@@ -26,17 +26,30 @@ Ele **não** faz: disparo ativo de mensagens, integrações com gateways de paga
 
 ## ✅ Pré-requisitos (contas que você precisa criar antes)
 
+> **IMPORTANTE pro Claude:** antes de começar a Fase 0, **confirme com o usuário** que ele já criou TODAS as contas abaixo. Se faltar alguma, pare e oriente ele a criar. Não tente avançar sem essas contas — vai travar no meio.
+
 Tenha em mãos antes de começar:
 
-1. 📱 **Um número de WhatsApp dedicado** pro agente (chip novo ou número secundário). NÃO use seu WhatsApp pessoal — risco de banimento.
-2. 🤖 **Conta Anthropic** com **plano Claude Pro** (ou superior) — pra usar o app Claude Code. https://claude.com/upgrade
-3. 🧠 **Conta na OpenAI com créditos** (mínimo $5) — https://platform.openai.com → Settings → Billing → Add credits.
-4. 🗄️ **Conta no Supabase** (free tier serve) — https://supabase.com
-5. 🐙 **Conta no GitHub** — https://github.com
-6. 🚂 **Conta no Railway** — https://railway.app (free tier serve no início; depois ~$5/mês)
-7. 🎬 **Conta no Gemini (OPCIONAL)** — só se quiser que o agente entenda **vídeos**. Áudio e imagem usam OpenAI. Chave em https://aistudio.google.com/apikey
+1. 📱 **Um número de WhatsApp dedicado** pro agente (chip novo ou número secundário). **NÃO use seu WhatsApp pessoal** — risco de banimento permanente. Compre um chip novo (R$15) se precisar.
+2. 🤖 **Conta Anthropic + plano Claude Pro ATIVO** — https://claude.ai/login (criar conta) → depois https://claude.com/upgrade (assinar Pro, US$ 20/mês). **Sem o plano pago, o app Claude Code não funciona.**
+3. 🧠 **Conta OpenAI com cartão e créditos**:
+   - Criar: https://platform.openai.com/signup
+   - Adicionar cartão: https://platform.openai.com/settings/organization/billing/payment-methods
+   - Comprar créditos: https://platform.openai.com/settings/organization/billing/overview → "Add credit balance" → mínimo US$ 5
+   - Gerar API key: https://platform.openai.com/api-keys → "+ Create new secret key" → copiar (começa com `sk-proj-...`) e GUARDAR (não dá pra ver de novo)
+4. 🗄️ **Conta Supabase** — https://supabase.com → "Start your project" → login com GitHub é o mais fácil.
+5. 🐙 **Conta GitHub** — https://github.com/signup. **Recomendado**: ativar 2FA usando o app Authenticator (NÃO SMS) pra evitar problemas no `gh auth login`.
+6. 🚂 **Conta Railway** — https://railway.app → "Login" → "Login with GitHub" (mais rápido). Adicionar cartão em https://railway.app/account/billing pra desbloquear deploy de 3 serviços (free tier limita a 1).
+7. 🎬 **Conta Gemini (OPCIONAL)** — só pra analisar **vídeos**. Áudio e imagem usam OpenAI. Chave em https://aistudio.google.com/apikey
 
-**Custo estimado**: ~$10/mês pra começar (OpenAI sob demanda + Railway). Se usar pouco, fica abaixo de $20/mês.
+**Custo estimado mensal:**
+- Claude Pro: US$ 20 (fixo)
+- OpenAI: US$ 5–30 (depende do volume — cada conversa custa ~$0.001)
+- Railway: US$ 5–10 (free tier inicial cobre 1 mês de teste)
+- Supabase: US$ 0 (free tier basta pra começar)
+- **Total mês 1: ~US$ 25 / Mês recorrente: ~US$ 30–60**
+
+**Tempo total da instalação:** ~1h30 pra leigo absoluto. ~30min pra quem já mexeu com programação.
 
 ---
 
@@ -50,11 +63,18 @@ Tenha em mãos antes de começar:
 
 O usuário pode estar com nada instalado. Você (Claude) vai detectar e instalar.
 
+**ATENÇÃO Claude:** antes de rodar comandos, **avise o usuário** sobre os 2 momentos em que ele vai precisar interagir:
+
+> "Vou instalar algumas coisas no seu computador. Em 2 momentos você vai precisar fazer algo:
+> 1. **Senha de admin do Mac** — quando aparecer `Password:` no terminal, digite a senha do seu Mac e aperte Enter. Você não vai ver os caracteres digitados, é normal. Aperte Enter mesmo sem ver nada acontecer.
+> 2. **Browser pra GitHub** — vai abrir uma página do GitHub pra fazer login. Faça login normal."
+
 **Detectar o que tem:**
 
 ```bash
 node --version
 git --version
+gh --version
 ```
 
 Se algum não estiver instalado, instale automaticamente:
@@ -66,10 +86,14 @@ Se Homebrew não estiver instalado:
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
 
+> ⚠️ Esse comando vai pedir a **senha de admin do Mac**. Avise o usuário antes.
+
 Depois:
 ```bash
 brew install node git gh
 ```
+
+> Pode levar 5–10 min na primeira vez.
 
 #### No Windows
 
@@ -79,30 +103,56 @@ winget install Git.Git
 winget install GitHub.cli
 ```
 
+> Se aparecer prompt do UAC ("Quer permitir que esse app faça alterações?") → Sim.
+
 **Validar:**
 ```bash
-node --version    # deve mostrar v20+
+node --version    # deve mostrar v20 ou superior
 git --version
 gh --version
 ```
 
-Diga ao usuário em linguagem simples o que foi instalado.
+Diga ao usuário em linguagem simples o que foi instalado e o que cada coisa serve.
+
+#### Se brew install falhar no Mac
+
+Causas comuns:
+- **Mac antigo sem Xcode Command Line Tools**: `xcode-select --install` (vai abrir popup pra instalar — pode levar 20min).
+- **Permissão negada**: peça ao usuário pra rodar `sudo chown -R $(whoami) $(brew --prefix)/*`.
+- **Conexão lenta**: tenta de novo, brew baixa muita coisa.
 
 ---
 
-### Fase 1 — Login no GitHub e na Railway (CLI)
+### Fase 1 — Login no GitHub (CLI)
+
+> **Claude:** o `gh auth login` é interativo (precisa de input no terminal). Se o terminal interno do app travar, use a alternativa abaixo (PAT manual).
+
+#### Opção A — Fluxo recomendado (interativo)
 
 ```bash
 gh auth login
 ```
 
-Escolha **GitHub.com → HTTPS → Yes (autenticar git) → Login with a web browser**. Vai abrir o navegador, faça login.
+Responda quando o terminal perguntar:
+- *What account?* → **GitHub.com**
+- *Preferred protocol?* → **HTTPS**
+- *Authenticate Git with your GitHub credentials?* → **Yes**
+- *How would you like to authenticate?* → **Login with a web browser**
 
-Depois (opcional, ajuda no deploy automatizado):
+Vai aparecer um código de 8 dígitos (ex: `ABCD-1234`). **Copie esse código** e cole quando o GitHub abrir no browser. Faça login normal e cole o código.
+
+#### Opção B — Se travou (Personal Access Token manual)
+
+1. Vá em https://github.com/settings/tokens/new?scopes=repo,workflow,admin:public_key&description=claude-code
+2. Clique em **Generate token** (no fim da página)
+3. Copie o token (começa com `ghp_...` ou `github_pat_...`)
+4. Cole o token quando rodar:
+
 ```bash
-npm install -g @railway/cli
-railway login
+gh auth login --with-token
 ```
+
+Depois confirme: `gh auth status` deve mostrar "Logged in to github.com as ...".
 
 ---
 
@@ -126,17 +176,41 @@ railway login
 
 ### Fase 3 — Criar projeto no Supabase
 
-Diga ao usuário pra:
+> **Claude:** vai pegar **3 valores** do Supabase. Peça **um de cada vez** pro usuário não se confundir.
 
-1. Ir em https://supabase.com/dashboard → **New Project**
-2. Nome: `agente-whatsapp` (ou outro), região **South America (São Paulo)**, senha forte pro database (anote!).
-3. Aguardar ~2 minutos pra subir.
-4. Em **Settings → Data API**, copiar:
-   - `Project URL` → `SUPABASE_URL`
-   - `Project API keys → service_role (secret)` → `SUPABASE_SERVICE_ROLE_KEY`
-5. Em **Settings → General**, copiar o `Reference ID`.
+#### Passo 1 — Criar o projeto
 
-Você (Claude) edita os arquivos automaticamente quando o usuário colar os valores no chat:
+1. Abrir https://supabase.com/dashboard → **New Project**
+2. Preencher:
+   - **Name**: `agente-whatsapp` (ou outro)
+   - **Database Password**: clique em **Generate a password** e SALVE essa senha (você vai usar pra acessar o banco direto, se precisar)
+   - **Region**: **South America (São Paulo)**
+3. **Create new project**. Aguardar ~2 min até o status virar verde.
+
+#### Passo 2 — Pegar `SUPABASE_URL` (a URL do projeto)
+
+1. No menu esquerdo, clique no ícone de engrenagem ⚙️ → **API** (ou direto em https://supabase.com/dashboard/project/_/settings/api)
+2. Em **Project URL**, copie a URL inteira (formato `https://abcdefgh.supabase.co`).
+3. **Cole no chat** pro Claude preencher o `.env`.
+
+#### Passo 3 — Pegar `SUPABASE_SERVICE_ROLE_KEY` (a chave certa)
+
+⚠️ **CUIDADO**: nessa tela tem **DUAS chaves** que parecem iguais. Você quer a **`service_role`**, NÃO a **`anon` / `publishable`**.
+
+1. Na mesma tela (Settings → API), role até **Project API keys**.
+2. Tem uma chave chamada `anon` (ou `publishable`) — **NÃO É ESSA**.
+3. Tem outra chamada **`service_role`** com um botão **"Reveal"** ou olhinho 👁️ — **clique pra revelar** e copie ela.
+4. **Cole no chat**.
+
+> A `service_role` é uma chave master. NUNCA mostre ela em vídeo, post, screenshot público, ou suba pro GitHub. Se vazar, gire imediatamente em Settings → API → "Roll service_role secret".
+
+#### Passo 4 — Pegar o `Reference ID` (pro MCP)
+
+1. ⚙️ → **General** (ou https://supabase.com/dashboard/project/_/settings/general)
+2. Procure **Reference ID** (string tipo `abcdefghijklmnop`).
+3. **Cole no chat**.
+
+Você (Claude) edita os arquivos automaticamente conforme o usuário cola os valores:
 - `.env`: preencha `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY`.
 - `.mcp.json`: substitua `YOUR_PROJECT_REF` pelo Reference ID.
 
@@ -144,13 +218,40 @@ Você (Claude) edita os arquivos automaticamente quando o usuário colar os valo
 
 ### Fase 4 — Conectar o MCP do Supabase ao Claude Code
 
-Depois de editar o `.mcp.json`, **peça ao usuário pra fechar e abrir o Claude Code de novo nessa pasta** (o MCP só carrega na inicialização).
+> O MCP é o que permite o Claude Code criar tabelas, rodar SQL e ver o banco automaticamente.
 
-Quando ele reabrir, o Claude Code vai detectar o MCP e pedir autorização — ele aprova.
+#### Passo 1 — Confirmar que `.mcp.json` está preenchido
 
-Teste com: *"liste as tabelas do meu Supabase"*. Se funcionar, MCP tá ativo.
+Você (Claude) já editou na Fase 3. Confirme que `YOUR_PROJECT_REF` foi substituído pelo Reference ID real, abrindo o arquivo `.mcp.json` e mostrando ao usuário.
 
-> Se pedir um Personal Access Token (PAT), o usuário gera em https://supabase.com/dashboard/account/tokens
+#### Passo 2 — Fechar e abrir o app NA MESMA PASTA
+
+Diga ao usuário, com calma:
+
+> "Agora você precisa fechar o app Claude Code completamente e abrir de novo, **apontando pra essa mesma pasta**. O MCP só carrega quando o app inicia.
+>
+> Como fazer:
+> 1. Feche o app (⌘+Q no Mac, X no Windows). Não é só fechar a janela, é fechar o app.
+> 2. Abra o app de novo.
+> 3. Vá em **File → Open Recent** e clique no nome dessa pasta. Se não aparecer, vá em **File → Open Folder** e selecione a pasta `imersao-sac-agente-ia-whatsapp-main` de novo.
+> 4. Quando reabrir, vai aparecer um popup perguntando se você confia no MCP server do Supabase. **Clique em "Allow"** ou "Trust".
+> 5. Depois disso, **me diga 'continuar'** que eu sigo de onde paramos."
+
+#### Passo 3 — Gerar o Personal Access Token (PAT) do Supabase, se for pedido
+
+Se o app pedir um PAT pra autenticar o MCP:
+
+1. Abrir https://supabase.com/dashboard/account/tokens
+2. **Generate new token** → nome: `claude-code-mcp` → **Generate**.
+3. Copiar o token (começa com `sbp_...`) e colar no popup do Claude Code.
+
+#### Passo 4 — Validar que o MCP funciona
+
+Teste perguntando ao Claude (você mesmo, no chat):
+
+> *"liste as tabelas do meu Supabase"*
+
+Você (Claude) deve usar `mcp__supabase__list_tables`. Se voltar resposta (mesmo vazia, "no tables yet"), o MCP tá vivo. Se der erro de auth/network, refazer Passo 2.
 
 ---
 
@@ -298,9 +399,35 @@ Arquitetura final (3 serviços no mesmo projeto Railway):
    ```
 
 4. **Settings → Networking → Generate Domain** (URL pública).
-5. Aguardar deploy.
-6. Abrir `https://<seu-evolution>.up.railway.app/manager`, login com a `AUTHENTICATION_API_KEY`, **criar instância** (ex: `agente`).
-7. Clicar na instância → **QR Code** → escanear com o WhatsApp dedicado.
+5. Aguardar deploy ficar verde (~3 min).
+
+#### 8.3.1 — Conectar o WhatsApp via QR Code
+
+> **Atenção:** o QR Code expira em ~30 segundos. Tenha o celular do número dedicado **na mão** antes de começar.
+
+**Antes de gerar o QR:** no celular do número dedicado, abra o WhatsApp e vá em:
+- **Mac/iOS**: WhatsApp → ⚙️ Configurações → **Aparelhos conectados** → **Conectar um aparelho**.
+- **Android**: WhatsApp → ⋮ (3 pontinhos) → **Aparelhos conectados** → **Conectar um aparelho**.
+
+A câmera vai abrir aguardando o QR.
+
+**Agora no computador:**
+
+1. Abrir `https://<seu-evolution>.up.railway.app/manager`.
+2. Tela de login pede a chave: cole a `AUTHENTICATION_API_KEY` que você gerou.
+3. Clicar em **+ Instance** → preencher:
+   - **Name**: `agente` (vai pra `EVOLUTION_INSTANCE` no app)
+   - **Token**: deixe vazio (a Evolution gera automático)
+   - **Integration**: `WHATSAPP-BAILEYS` (ou `Baileys` — é o padrão sem custo)
+   - **Auto reload QR Code**: marcado
+4. **Save**.
+5. A instância aparece na lista. Clique nela → **QR Code** (botão grande).
+6. **Escaneie com o celular** (a câmera que você abriu).
+7. Quando conectar, o status vira **OPEN** ou **CONNECTED** (verde).
+
+**Se o QR expirar antes de você escanear:** clique em **Refresh** ou **Reload** pra gerar outro. Pode tentar quantas vezes precisar.
+
+**Se conectar mas cair logo depois:** geralmente é o WhatsApp banindo conexões suspeitas. Use um número que tenha sido ativo por pelo menos 1 semana antes — números recém-criados levam ban rápido.
 
 #### 8.4 — App (este projeto)
 

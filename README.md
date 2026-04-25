@@ -16,11 +16,11 @@ Disponível pra Mac e Windows. Faça login com sua conta Anthropic (precisa de p
 
 👉 https://github.com/orodrigobarcelos/imersao-sac-agente-ia-whatsapp/archive/refs/heads/main.zip
 
-Extraia o zip num lugar fácil de achar (ex: a pasta `Documentos`).
+Extraia o zip num lugar fácil de achar (ex: a pasta `Documentos`). A pasta vai se chamar `imersao-sac-agente-ia-whatsapp-main` — pode renomear pra `agente-whatsapp` se quiser, dá no mesmo.
 
 ### 3) Abra a pasta no Claude Code
 
-No app do Claude Code: **File → Open Folder** (ou **Abrir Pasta**) → escolha a pasta que você acabou de extrair.
+No app do Claude Code: **File → Open Folder** (ou **Abrir Pasta**) → escolha a pasta que você acabou de extrair. Se o app pedir confirmação ("Trust this folder?"), aceite.
 
 ### 4) Diga ao Claude:
 

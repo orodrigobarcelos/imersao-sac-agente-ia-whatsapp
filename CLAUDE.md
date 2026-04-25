@@ -66,7 +66,10 @@ O usuário pode estar com nada instalado. Você (Claude) vai detectar e instalar
 **ATENÇÃO Claude:** antes de rodar comandos, **avise o usuário** sobre os 2 momentos em que ele vai precisar interagir:
 
 > "Vou instalar algumas coisas no seu computador. Em 2 momentos você vai precisar fazer algo:
-> 1. **Senha de admin do Mac** — quando aparecer `Password:` no terminal, digite a senha do seu Mac e aperte Enter. Você não vai ver os caracteres digitados, é normal. Aperte Enter mesmo sem ver nada acontecer.
+>
+> 1. **Autorizar a instalação:**
+>    - **No Mac**: vai aparecer `Password:` no terminal — digite a senha do seu Mac e aperte Enter. **Você não vai ver os caracteres digitados, é normal.** Aperte Enter mesmo sem ver nada acontecer.
+>    - **No Windows**: vai aparecer um popup do Windows ("Quer permitir que esse app faça alterações?") — clique em **Sim**.
 > 2. **Browser pra GitHub** — vai abrir uma página do GitHub pra fazer login. Faça login normal."
 
 **Detectar o que tem:**
@@ -121,6 +124,17 @@ Causas comuns:
 - **Permissão negada**: peça ao usuário pra rodar `sudo chown -R $(whoami) $(brew --prefix)/*`.
 - **Conexão lenta**: tenta de novo, brew baixa muita coisa.
 
+#### Se winget falhar no Windows
+
+Causas comuns:
+- **`winget` não reconhecido**: o Windows é antigo (pré 1809) ou o App Installer está faltando. Solução: instale o **App Installer** pela Microsoft Store: https://apps.microsoft.com/detail/9NBLGGH4NNS1
+- **Política bloqueia**: rode o PowerShell como **Administrador** (botão direito → "Executar como administrador") e tente de novo.
+- **Plano B (download manual)**: se nada funcionar, baixe os instaladores direto:
+  - Node.js LTS: https://nodejs.org/en/download
+  - Git for Windows: https://git-scm.com/download/win
+  - GitHub CLI: https://cli.github.com (botão Download)
+  Rode cada instalador, "Next, Next, Finish" — depois feche e abra o Claude Code de novo pra ele detectar.
+
 ---
 
 ### Fase 1 — Login no GitHub (CLI)
@@ -166,10 +180,12 @@ Depois confirme: `gh auth status` deve mostrar "Logged in to github.com as ...".
    ```bash
    npm run typecheck
    ```
-3. Criar arquivos de configuração local (vão ser preenchidos nas próximas fases):
+3. Criar arquivos de configuração local (vão ser preenchidos nas próximas fases). **Claude:** use suas próprias tools `Read` + `Write` pra copiar o conteúdo dos arquivos `.env.example` → `.env` e `.mcp.json.example` → `.mcp.json`. Isso funciona em Mac/Windows/Linux sem depender de comandos shell (`cp` não existe no cmd do Windows).
+
+   Se preferir usar shell, use comandos cross-platform via Node:
    ```bash
-   cp .env.example .env
-   cp .mcp.json.example .mcp.json
+   node -e "require('fs').copyFileSync('.env.example', '.env')"
+   node -e "require('fs').copyFileSync('.mcp.json.example', '.mcp.json')"
    ```
 
 ---
@@ -380,13 +396,21 @@ Arquitetura final (3 serviços no mesmo projeto Railway):
 
 1. **+ New** → **Docker Image** → `atendai/evolution-api:latest`.
 2. Renomeie pra `evolution-api`.
-3. Em **Variables**, cole (gere a `AUTHENTICATION_API_KEY` aleatória — peça ao usuário pra rodar `openssl rand -hex 32` ou use o gerador interno):
+3. **Gere a `AUTHENTICATION_API_KEY`** (chave forte aleatória) usando Node — funciona em Mac/Windows/Linux:
+
+   ```bash
+   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+   ```
+
+   Vai imprimir uma string de 64 caracteres hexadecimais (ex: `3f8a91c2...`). **Copie e guarde** — você vai usar nessa Fase E na Fase 8.4 (no app).
+
+4. Em **Variables**, cole:
 
    ```
    SERVER_TYPE=http
    SERVER_PORT=8080
    SERVER_URL=https://${{RAILWAY_PUBLIC_DOMAIN}}
-   AUTHENTICATION_API_KEY=<chave-forte-aleatória>
+   AUTHENTICATION_API_KEY=<cole a chave gerada no passo 3>
    DATABASE_ENABLED=true
    DATABASE_PROVIDER=postgresql
    DATABASE_CONNECTION_URI=${{evolution-postgres.DATABASE_URL}}
@@ -398,8 +422,8 @@ Arquitetura final (3 serviços no mesmo projeto Railway):
    CONFIG_SESSION_PHONE_NAME=Chrome
    ```
 
-4. **Settings → Networking → Generate Domain** (URL pública).
-5. Aguardar deploy ficar verde (~3 min).
+5. **Settings → Networking → Generate Domain** (URL pública).
+6. Aguardar deploy ficar verde (~3 min).
 
 #### 8.3.1 — Conectar o WhatsApp via QR Code
 

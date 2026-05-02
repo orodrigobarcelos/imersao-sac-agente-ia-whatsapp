@@ -167,15 +167,42 @@ FASE 3 — Agente IA (GitHub Repo)
    aba e confirme que retorna {"status":"ok"}.
 
 ═══════════════════════════════════════════════════
-FASE 4 — Resumo final
+FASE 4 — Resumo parcial
 ═══════════════════════════════════════════════════
-Me passe:
-- URL pública do evolution-api (vou usar pra abrir o /manager e fazer QR Code)
-- URL pública do ia-whatsapp-app (vou configurar o webhook depois)
+Me passe e PAUSE até eu confirmar que parei o WhatsApp via QR Code:
+- URL pública do evolution-api (vou abrir o /manager e fazer QR Code)
+- URL pública do ia-whatsapp-app (vou usar na Fase 5 pra configurar webhook)
 - Status verde de TODOS os 3 serviços
 
-REGRAS:
+NÃO tente configurar webhook ainda — depende do QR estar pareado.
+
+═══════════════════════════════════════════════════
+FASE 5 — Webhook do Evolution → app (FAÇA SÓ DEPOIS DE EU CONFIRMAR QR)
+═══════════════════════════════════════════════════
+Quando eu disser "QR pareado, pode seguir", abra numa nova aba:
+
+   https://<URL pública do evolution-api>/manager
+
+Faça login com a AUTHENTICATION_API_KEY (a mesma da Fase 2).
+
+1. Abra a instância que eu pareei (nome bate com EVOLUTION_INSTANCE).
+2. Vá na aba "Webhook" (ou "Eventos" / "Settings → Webhook" — varia).
+3. Configure EXATAMENTE assim — NÃO INVENTE nem encurte a URL:
+
+   URL:      https://<URL pública do ia-whatsapp-app>/webhooks/evolution
+             (note bem: "webhooks" no plural E "/evolution" no final)
+   Events:   MESSAGES_UPSERT  e  MESSAGES_UPDATE  (marque os DOIS)
+   Enabled:  true (marcado/ligado)
+   Webhook by Events: pode deixar desligado
+
+4. Salvar. Confirme comigo.
+
+═══════════════════════════════════════════════════
+REGRAS GERAIS
+═══════════════════════════════════════════════════
 - Nunca invente chaves ou URLs — sempre PAUSE e pergunte.
+- A URL do webhook é SEMPRE no formato /webhooks/evolution (plural + sufixo).
+  Se estiver em dúvida, PAUSE e me pergunte.
 - Se algum deploy demorar mais de 5 min, PAUSE e me mostre os logs.
 - Se Railway pedir cartão de crédito, PAUSE e me avise.
 - Se a UI estiver diferente do que eu descrevi, descreva o que você
@@ -211,10 +238,14 @@ Cole o resultado quando a extensão pedir.
 
 ---
 
-## 🔄 Depois que terminar a Railway
+## 🔄 Depois que a extensão terminar a Fase 4 (Railway)
 
-Volte pro Claude Code app desktop e siga as fases que faltam:
+A extensão vai pausar e te entregar as duas URLs públicas. Faça nesta ordem:
 
-1. **Conectar WhatsApp via QR Code** — abra `https://<seu-evolution>.up.railway.app/manager` e faça o pareamento (Fase 8.3.1 do CLAUDE.md).
-2. **Configurar webhook** apontando o Evolution pro app (Fase 9 do CLAUDE.md).
-3. **Testar** mandando uma mensagem de outro WhatsApp (Fase 10).
+1. **Conectar WhatsApp via QR Code (você manualmente)** — abra `https://<seu-evolution>.up.railway.app/manager`, faça login com a `AUTHENTICATION_API_KEY`, crie a instância com o mesmo nome do `EVOLUTION_INSTANCE` que você passou pra extensão, gere QR e escaneie com o WhatsApp dedicado (Fase 8.3.1 do CLAUDE.md).
+
+2. **Voltar na extensão e dizer "QR pareado, pode seguir"** — aí ela executa a **Fase 5 do prompt** (configura o webhook apontando pro app, com a URL correta `/webhooks/evolution`).
+
+3. **Testar** mandando uma mensagem de outro WhatsApp (Fase 10 do CLAUDE.md).
+
+> Se preferir configurar o webhook manualmente em vez de deixar a extensão fazer, siga a Fase 9 do [`CLAUDE.md`](../CLAUDE.md#fase-9--configurar-webhook-do-evolution). A URL é sempre `https://<seu-app>.up.railway.app/webhooks/evolution` (plural + sufixo `/evolution`).

@@ -394,7 +394,7 @@ Arquitetura final (3 serviços no mesmo projeto Railway):
 
 #### 8.3 — Evolution API
 
-1. **+ New** → **Docker Image** → `atendai/evolution-api:latest`.
+1. **+ New** → **Docker Image** → `evoapicloud/evolution-api:latest`.
 2. Renomeie pra `evolution-api`.
 3. **Gere a `AUTHENTICATION_API_KEY`** (chave forte aleatória) usando Node — funciona em Mac/Windows/Linux:
 

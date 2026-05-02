@@ -14,8 +14,22 @@ const RESPONSE_SCHEMA = {
     properties: {
       mensagens: {
         type: 'array',
-        items: { type: 'string', minLength: 1 },
-        minItems: 1,
+        description:
+          'Lista de mensagens separadas que serão enviadas SEQUENCIALMENTE no WhatsApp, simulando como um humano digita em pedaços. ' +
+          'OBRIGATÓRIO dividir em 2-5 mensagens curtas — NUNCA retornar uma única string longa. ' +
+          'Cada item do array vira UMA mensagem separada no chat. ' +
+          'Quebra natural recomendada: confirmação/saudação na 1ª, próximo passo/explicação na 2ª, CTA/link/pergunta na 3ª. ' +
+          'Mesmo respostas curtas devem virar 2 mensagens (ex: "perfeito!" + "vou te enviar agora"). ' +
+          'NÃO é um array de parágrafos — é um array de MENSAGENS DE WHATSAPP.',
+        items: {
+          type: 'string',
+          minLength: 1,
+          description:
+            'Texto de UMA mensagem isolada de WhatsApp. Máximo 1-3 linhas (frases curtas, fôlego natural). ' +
+            'Sem markdown (sem **, sem -, sem #). No máximo 1 emoji. ' +
+            'Não comece com cumprimento se não for a primeira mensagem da conversa.',
+        },
+        minItems: 2,
         maxItems: 5,
       },
     },

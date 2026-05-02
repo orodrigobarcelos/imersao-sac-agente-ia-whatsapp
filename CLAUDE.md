@@ -373,6 +373,8 @@ Substitua `agente-whatsapp` pelo nome que ele preferir.
 
 ### Fase 8 — Subir Postgres + Evolution API + app na Railway
 
+> 💡 **Atalho opcional:** se você tem a extensão **Claude for Chrome** instalada, pode pular os cliques manuais abaixo e deixar a extensão configurar tudo sozinha. Veja [`docs/RAILWAY_VIA_CHROME.md`](./docs/RAILWAY_VIA_CHROME.md).
+
 Arquitetura final (3 serviços no mesmo projeto Railway):
 
 ```

@@ -39,6 +39,12 @@ O Claude vai ler o arquivo [`CLAUDE.md`](./CLAUDE.md) e te guiar passo-a-passo:
 
 **Tempo estimado:** ~1 hora pra alguém leigo. ~20 minutos pra quem já mexeu com isso.
 
+### Atalho opcional — Configurar a Railway via Claude for Chrome
+
+Se você tem a extensão **Claude for Chrome** instalada, dá pra deixar ela configurar os 3 serviços da Railway sozinha (clica nos botões, cola env vars, gera domínio) enquanto você só responde quando ela pede valor. Veja o passo-a-passo em [`docs/RAILWAY_VIA_CHROME.md`](./docs/RAILWAY_VIA_CHROME.md) — começa explicando como subir o template pro seu GitHub e depois entrega um prompt pronto pra colar na extensão.
+
+> Funciona com plano Anthropic Pro (Haiku 4.5) ou Max (Opus 4.7 — recomendado). As outras fases (Supabase, prompt do agente, QR Code, webhook) continuam sendo feitas no Claude Code app desktop.
+
 ## Stack
 
 - **Node 20+ / TypeScript** (Fastify)
